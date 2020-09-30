@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  columns: 1
+  rows: 1
+  data: 
+
+two:
+  columns: 1
+  rows: 1
+  data: 
