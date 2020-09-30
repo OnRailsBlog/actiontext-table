@@ -1,0 +1,12 @@
+<div data-controller="table-editor" data-table-editor-id="<%= table.attachable_sgid %>">
+  <button type="button" data-action="table-editor#addRow">Add Row</button><button type="button" data-action="table-editor#addColumn">Add Column</button>
+  <table class="table is-bordered">
+	<% (0...table.rows).each do |r| %>
+	  <tr>
+		<% (0...table.columns).each do |c| %>
+		  <td><input class="table-input" data-key="<%= r %>-<%= c %>" data-action="table-editor#updateCell" value="<%= table.data["#{r}-#{c}"]%>" /></td>
+		<% end %>
+	  </tr>
+	<% end %>
+  </table>
+</div>

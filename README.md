@@ -50,6 +50,23 @@ td:not([align]), th:not([align]) {
 	padding: .5em .75em;
 	vertical-align: top
 }
+
+.table.is-bordered td, .table.is-bordered th {
+	border-width: 1px
+}
+
+.table.is-bordered tr:last-child td, .table.is-bordered tr:last-child th {
+	border-bottom-width: 1px
+}
+  
+.table-input {
+	background-color: transparent;
+	border-color: transparent;
+	box-shadow: none;
+	padding-left: 0;
+	padding-right: 0;
+	margin: 0;
+}
 ```
 
 ## Trix Additions
@@ -194,5 +211,37 @@ class TablesController < ApplicationController
   end
 end
 ```
+### Table Views
+There is a partial for the editor view, so add that file, `tables/_editor.html.erb`:
+```html
+<div data-controller="table-editor" data-table-editor-id="<%= table.attachable_sgid %>">
+  <button type="button" data-action="table-editor#addRow">Add Row</button><button type="button" data-action="table-editor#addColumn">Add Column</button>
+  <table class="table is-bordered">
+	<% (0...table.rows).each do |r| %>
+	  <tr>
+		<% (0...table.columns).each do |c| %>
+		  <td><input class="table-input" data-key="<%= r %>-<%= c %>" data-action="table-editor#updateCell" value="<%= table.data["#{r}-#{c}"]%>" /></td>
+		<% end %>
+	  </tr>
+	<% end %>
+  </table>
+</div>
+```
+ It displays the data inside by going row by row, and then column by column, and inserting an `input` tag. The input tag is editable, so any text can be entered.
+The partial for a published Table follows the rails naming convention, and exists at `tables/_table.html.erb`. This also lists the data row by column, but doesn’t have an input field in the cell.
+```html
+<table class="table is-bordered">
+  <% (0...table.rows).each do |r| %>
+	<tr>
+	  <% (0...table.columns).each do |c| %>
+		<td><%= table.data["#{r}-#{c}"]%></td>
+	  <% end %>
+	</tr>
+  <% end %>
+</table> 
+```
+
+### First pass
+If you create a new post, or edit an existing one, and click the table button, you should see a 1x1 table. Now we need to add some interactivity to the table to make this usable.
 
 
