@@ -1,11 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  columns: 1
-  rows: 1
-  data: 
+    columns: 1
+    rows: 1
+    data: {'0-0': 'This is content'}
 
 two:
-  columns: 1
-  rows: 1
-  data: 
+    columns: 1
+    rows: 1
+    data: {}

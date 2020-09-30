@@ -1,4 +1,5 @@
-# one:
-#   record: name_of_fixture (ClassOfFixture)
-#   name: content
-#   body: <p>In a <i>million</i> stars!</p>
+one:
+    id: 1
+    record: name_of_fixture (ClassOfFixture)
+    name: content
+    body: <p>In a <i>million</i> stars!</p>
