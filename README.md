@@ -88,7 +88,7 @@ export default class extends Controller {
 
 	connect() {
 		Trix.config.lang.table = "Table"
-		var tableButtonHTML = `<button type="button" class="trix-button trix-button--icon trix-button--icon-table" data-action="rich-text-table#attachTable" title="${lang.attachFiles}" tabindex="-1">${lang.table}</button>`
+		var tableButtonHTML = `<button type="button" class="trix-button trix-button--icon trix-button--icon-table" data-action="rich-text-table#attachTable" title="Attach Table" tabindex="-1">${lang.table}</button>`
 		var fileToolsElement = this.element.querySelector('[data-trix-button-group=file-tools]')
 		fileToolsElement.insertAdjacentHTML("beforeend", tableButtonHTML)
 	}
