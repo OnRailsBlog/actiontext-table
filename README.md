@@ -107,6 +107,92 @@ trix-toolbar .trix-button--icon-table::before {
 }
 ```
 
+## The Table model
+The next section is going to move quickly, with a bunch of parts that need to be in place for everything to work together. In order to take advantage of the secure attachments, our table needs a model behind it. Using ActiveRecord is the most conventional way to design the Table.
 
+The model `Table` that contains the number of rows and the number of columns. The data inside each cell is stored in a JSON blob, indexed by combining the row and column index for each cell, ie: `'0-1'`, `'3-2'`, or`'100-99'`. This sparse matrix saves space when there are empty cells, and, more importantly, gives the table complete flexibility as rows and columns are added.
+
+Next, a Rails controller is needed to support creating a new table, supporting editing updates. 
+
+Third, the `Table` model needs a HTML fragment for the editor view and a HTML fragment for the published view. 
+
+### Table ActiveRecord
+Create the ActiveRecord model: 
+```bash
+rails g model table columns:integer rows:integer data:json
+```
+
+Then set some defaults in the migration file:
+```ruby
+class CreateTables < ActiveRecord::Migration[6.0]
+  def change
+	create_table :tables do |t|
+	  t.integer :columns, default: 1
+	  t.integer :rows, default: 1
+	  t.json :data, default: {}
+
+	  t.timestamps
+	end
+  end
+end
+```
+Open `table.rb` and add some extra modules that will make `Table` attachable, and whitelist the table tags in ActionText :
+```ruby
+ActionText::ContentHelper.allowed_tags += ['table', 'tr', 'td']
+
+class Table < ApplicationRecord
+  include GlobalID::Identification
+  include ActionText::Attachable
+
+  def to_trix_content_attachment_partial_path
+	"tables/editor"
+  end
+end
+
+```
+_Make sure you restart your server after adding this file. The ActionText sanitizer is a singleton and needs to be reconfigured with the new allowed tags. Restarting your development server is good enough._
+
+### Table Controller
+Create a `tables_controller.rb` and add the `show`, `create`, and `update` methods. You can add the following in `routes.rb`:
+```ruby
+resources :tables, only: [:show, :create, :update]
+```
+
+Then create the controller, `tables_controller.rb`:
+```ruby
+class TablesController < ApplicationController
+  def show
+	@table = Table.find params[:id]
+	render json: {
+		sgid: @table.attachable_sgid,
+		content: render_to_string(partial: "tables/editor", locals: { table: @table }, formats: [:html])
+	}
+  end
+
+  def create
+	@table = Table.create
+	render json: {
+		sgid: @table.attachable_sgid,
+		content: render_to_string(partial: "tables/editor", locals: { table: @table }, formats: [:html])
+	}
+  end
+  
+  def update
+	@table = ActionText::Attachable.from_attachable_sgid params[:id]
+	if params["method"] == "addRow"
+	  @table.rows += 1
+	elsif params["method"] == "addColumn"
+	  @table.columns += 1
+	elsif params["method"] == "updateCell"
+	  @table.data[params['cell']] = params['value']
+	end
+	@table.save
+	render json: {
+		sgid: @table.attachable_sgid,
+		content: render_to_string(partial: "tables/editor", locals: { table: @table }, formats: [:html])
+	}
+  end
+end
+```
 
 
