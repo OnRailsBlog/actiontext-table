@@ -245,3 +245,72 @@ The partial for a published Table follows the rails naming convention, and exist
 If you create a new post, or edit an existing one, and click the table button, you should see a 1x1 table. Now we need to add some interactivity to the table to make this usable.
 
 
+## Table Editor Controller
+Each Trix editor could have multiple tables, each with its own data, therefore, it makes most sense to have a Stimulus controller for each table. 
+
+This Stimulus controller handles editing the table. Any changes in the input tag will send an update request to the server, the server save the changes, and returns a new version of the table. This table tutorial supports three operations: add a row, add a column, change a cell’s value. Many more could be added at a later time, such as remove row, insert row, remove column, insert column, etc. The request to the server follows a remote procedure call, or RPC, style, with one endpoint, the update method on the Rails controller, and many different actions depending on the data sent to the server.
+
+The `Add Row` button above the table adds a row at the bottom of the table by calling `addRow()`. The `Add Column` button above the table adds a column to the right side of the table by calling `addColumn()`. Both buttons send a `PATCH` to the server, and take the new HTML returned from the server. Once the cell values change, the stimulus controller sends the value back to the server for storage. Because the data on the page and on the server match, there is no need to update anything on a successful call.
+
+Here is `table_editor_controller.js`:
+```js
+import { Controller } from "stimulus"
+import Trix from "trix"
+import Rails from "@rails/ujs"
+
+const MAX_PARENT_SEARCH_DEPTH = 5;
+
+export default class extends Controller {
+
+	addRow(event) {
+		Rails.ajax({
+			url: `/tables/${this.getID()}`,
+			data: 'method=addRow' ,
+			type: 'patch',
+			success: this.attachTable.bind(this)
+		})
+	}
+
+	addColumn(event) {
+		Rails.ajax({
+			url: `/tables/${this.getID()}`,
+			data: 'method=addColumn' ,
+			type: 'patch',
+			success: this.attachTable.bind(this)
+		})
+	}
+
+	updateCell(event) {
+		Rails.ajax({
+			url: `/tables/${this.getID()}`,
+			data: `method=updateCell&cell=${encodeURIComponent(event.target.dataset.key)}&value=${encodeURIComponent(event.target.value)}` ,
+			type: 'patch'
+		})
+	}
+
+	getID() {
+		return this.data.get('id');
+	}
+
+	attachTable(tableAttachment) {
+		let attachment = new Trix.Attachment(tableAttachment)
+		var parent = this.element.parentNode;
+		var editorNode = null;
+		for (let i = 0; i < MAX_PARENT_SEARCH_DEPTH; i++) {
+			editorNode = parent.querySelector('trix-editor');
+			if (editorNode != null) {
+				i = MAX_PARENT_SEARCH_DEPTH;
+			} else {
+				parent = parent.parentNode;
+			}
+		}
+		editorNode.editor.insertAttachment(attachment)
+	}
+}  
+```
+
+Reload the page, add some data and save! You should have a table on the next page. Importantly, it’s in a published state, where the fields aren’t editable.
+
+## Putting it together
+I hope this example, along with the original Youtube preview example, shows you the power of ActionText’s flexibility. 
+
