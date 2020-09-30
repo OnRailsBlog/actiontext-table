@@ -3,10 +3,12 @@
   "private": true,
   "dependencies": {
     "@rails/actioncable": "^6.0.0",
+    "@rails/actiontext": "^6.0.3-3",
     "@rails/activestorage": "^6.0.0",
     "@rails/ujs": "^6.0.0",
     "@rails/webpacker": "4.3.0",
     "stimulus": "^1.1.1",
+    "trix": "^1.2.0",
     "turbolinks": "^5.2.0"
   },
   "version": "0.1.0",
