@@ -12,3 +12,101 @@ Create a new rails app. This app will use Stimulus to handle the interactivity o
 ```bash
 rails new actiontext-table --webpack=stimulus
 ```
+
+Install ActionText in the app:
+```bash
+rails action_text:install
+```
+
+Create a Post model and the scaffolding to start quickly:
+```bash
+rails g scaffold Post body:rich_text
+```
+You now have the rich text form at `/posts/new`.
+
+There is some css added in `posts.scss`, taken from bulma.io, that will allow the table to be see once it’s added to Trix. Add it to `application.css`:
+```css
+table {
+	border-collapse: collapse;
+	border-spacing:0
+}
+
+td, th {
+	padding:0
+}
+
+td:not([align]), th:not([align]) {
+	text-align:left
+}
+
+.table {
+	background-color: #fff;
+	color: #363636
+}
+
+.table td, .table th {
+	border: 1px solid #dbdbdb;
+	border-width: 0 0 1px;
+	padding: .5em .75em;
+	vertical-align: top
+}
+```
+
+## Trix Additions
+The first component to add is a table button to the Trix editor. This can be done with a Stimulus controller, called `rich_text_table_controller.js`. This controller adds a button to the editor menu, and handles adding a table to the rich text editor.  
+
+The `connect()` method adds a new “Table” button, which, when clicked, creates a new table. 
+
+ActionText is designed to use secure attachments. This is a clever way to prevent leaking data, such as autocompleting files or usernames that you shouldn’t be able to access. This complicates our table setup, but isn’t going to stop our implementation. The `attachTable()` action on the controller generates a HTTP Post to the server to create the first table skeleton. When the server returns a table, `showTable()` attaches the table to the editor, and we can interact with it.
+
+`rich_text_table_controller.js` code:
+```js
+import { Controller } from "stimulus"
+import Trix from "trix"
+import Rails from "@rails/ujs"
+
+let lang = Trix.config.lang;
+
+export default class extends Controller {
+
+	connect() {
+		Trix.config.lang.table = "Table"
+		var tableButtonHTML = `<button type="button" class="trix-button trix-button--icon trix-button--icon-table" data-action="rich-text-table#attachTable" title="${lang.attachFiles}" tabindex="-1">${lang.table}</button>`
+		var fileToolsElement = this.element.querySelector('[data-trix-button-group=file-tools]')
+		fileToolsElement.insertAdjacentHTML("beforeend", tableButtonHTML)
+	}
+
+	attachTable(event) {
+		Rails.ajax({
+			url: `/tables`,
+			type: 'post',
+			success: this.insertTable.bind(this)
+		})
+	}
+
+	insertTable(tableAttachment) {
+		this.attachment = new Trix.Attachment(tableAttachment)
+		this.element.querySelector('trix-editor').editor.insertAttachment(this.attachment)
+		this.element.focus()
+	}
+}
+```
+
+Add the Stimulus controller to the `rich_text_area` tag in the Post form at `posts/_form.html.erb`:
+```html
+<div class="field" data-controller="rich-text-table">
+  <%= form.label :body %>
+  <%= form.rich_text_area :body %>
+</div>
+```
+
+And add the SVG icon for the table button. This could go in `posts.scss`:
+```css
+trix-toolbar .trix-button--icon-table::before {
+  background-image: url(data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%3Cg%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Crect%20stroke%3D%22%23000000%22%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%3E%3C%2Frect%3E%3Cpath%20d%3D%22M3%2C9%20L21%2C9%22%20stroke%3D%22%23000000%22%20stroke-linecap%3D%22square%22%3E%3C%2Fpath%3E%3Cpath%20d%3D%22M3%2C15%20L21%2C15%22%20stroke%3D%22%23000000%22%20stroke-linecap%3D%22square%22%3E%3C%2Fpath%3E%3Cpath%20d%3D%22M12%2C3%20L12%2C21%22%20stroke%3D%22%23000000%22%20stroke-linecap%3D%22square%22%3E%3C%2Fpath%3E%3C%2Fg%3E%3C%2Fsvg%3E);
+}
+```
+
+
+
+
