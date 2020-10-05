@@ -4,7 +4,7 @@
 	<% (0...table.rows).each do |r| %>
 	  <tr>
 		<% (0...table.columns).each do |c| %>
-		  <td><input class="table-input" data-key="<%= r %>-<%= c %>" data-action="table-editor#updateCell" value="<%= table.data["#{r}-#{c}"]%>" /></td>
+		  <td><input class="table-input" name="<%= r %>-<%= c %>" data-key="<%= r %>-<%= c %>" data-action="table-editor#updateCell" value="<%= table.data["#{r}-#{c}"]%>" /></td>
 		<% end %>
 	  </tr>
 	<% end %>
